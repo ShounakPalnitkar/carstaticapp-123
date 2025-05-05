@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Electric Car Efficiency Recommender</title>
+    <style>
+        :root {
+            --primary-color: #2e7d32;
+            --secondary-color: #81c784;
+            --accent-color: #ff8f00;
+            --background-color: #f5f5f5;
+            --text-color: #333;
+            --light-text: #666;
+            --border-color: #ddd;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--background-color);
+            padding: 0;
+            margin: 0;
+        }
+
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 2rem 1rem;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        section {
+            margin-bottom: 3rem;
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        h2 {
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--secondary-color);
+        }
+
+        .controls {
+            margin-bottom: 1rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #1b5e20;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background-color: var(--primary-color);
+            color: white;
+            position: sticky;
+            top: 0;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        .recommender-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+
+        select {
+            padding: 0.5rem;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+            font-size: 1rem;
+        }
+
+        .recommendations {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .car-card {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .car-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .car-card h3 {
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .car-card .price {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: var(--accent-color);
+            margin: 0.5rem 0;
+        }
+
+        .car-card .specs {
+            margin: 1rem 0;
+        }
+
+        .spec-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+
+        .spec-item .label {
+            font-weight: 500;
+        }
+
+        .spec-item .value {
+            font-weight: bold;
+        }
+
+        .recommendation-note {
+            background-color: #e8f5e9;
+            padding: 1rem;
+            border-left: 4px solid var(--primary-color);
+            margin-top: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .comparison-container {
+            margin-top: 1.5rem;
+        }
+
+        .selectors {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .selectors select {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .comparison-result {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        .comparison-card {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+        }
+
+        .comparison-spec {
+            margin-bottom: 1rem;
+        }
+
+        .comparison-spec h4 {
+            margin-bottom: 0.5rem;
+            color: var(--primary-color);
+        }
+
+        .comparison-spec .values {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .diff {
+            font-weight: bold;
+        }
+
+        .positive {
+            color: #2e7d32;
+        }
+
+        .negative {
+            color: #e53935;
+        }
+
+        .neutral {
+            color: #666;
+        }
+
+        .match-score {
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        footer {
+            text-align: center;
+            padding: 1.5rem;
+            background-color: var(--primary-color);
+            color: white;
+            margin-top: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .comparison-result {
+                grid-template-columns: 1fr;
+            }
+            
+            header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <h1>Electric Car Efficiency Recommender</h1>
+        <p>Discover the most energy-efficient electric vehicles tailored to your needs</p>
+    </header>
+
+    <main>
+        <section id="top-cars">
+            <h2>Top 10 Most Efficient Electric Cars</h2>
+            <div class="controls">
+                <button id="sort-efficiency">Sort by Efficiency</button>
+                <button id="sort-range">Sort by Range</button>
+                <button id="sort-price">Sort by Price</button>
+            </div>
+            <div class="table-container">
+                <table id="cars-table">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Brand</th>
+                            <th>Model</th>
+                            <th>Efficiency (km/kWh)</th>
+                            <th>Range (km)</th>
+                            <th>Price (€)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cars-table-body">
+                        <!-- Filled by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="recommender">
+            <h2>Personalized Recommendations</h2>
+            <div class="recommender-form">
+                <div class="form-group">
+                    <label for="budget">Budget (€):</label>
+                    <input type="range" id="budget" min="20000" max="150000" step="1000" value="50000">
+                    <span id="budget-value">€50,000</span>
+                </div>
+                <div class="form-group">
+                    <label for="range">Minimum Range (km):</label>
+                    <input type="range" id="range" min="100" max="600" step="10" value="300">
+                    <span id="range-value">300 km</span>
+                </div>
+                <div class="form-group">
+                    <label for="priority">Priority:</label>
+                    <select id="priority">
+                        <option value="efficiency">Efficiency</option>
+                        <option value="range">Range</option>
+                        <option value="price">Price</option>
+                        <option value="balanced">Balanced</option>
+                    </select>
+                </div>
+                <button id="get-recommendations">Get Recommendations</button>
+            </div>
+            <div id="recommendations-container" class="recommendations">
+                <!-- Filled by JavaScript -->
+            </div>
+        </section>
+
+        <section id="comparison">
+            <h2>Comparison Tool</h2>
+            <div class="comparison-container">
+                <div class="selectors">
+                    <select id="compare-car1">
+                        <option value="">Select first car</option>
+                    </select>
+                    <select id="compare-car2">
+                        <option value="">Select second car</option>
+                    </select>
+                    <button id="compare-button">Compare</button>
+                </div>
+                <div id="comparison-result" class="comparison-result">
+                    <!-- Filled by JavaScript -->
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>Data source: Electric vehicle efficiency database</p>
+        <p>©️ 2023 Electric Car Recommender</p>
+    </footer>
+
+    <script>
+        // Car data
+        const carData = [
+            {
+                "brand": "Lightyear",
+                "model": "One",
+                "electric_mileage_km_per_kwh": 11.584801,
+                "range_km": 551.98,
+                "priceeuro": 149000,
+                "type": "sedan",
+                "description": "Solar electric vehicle with industry-leading efficiency"
+            },
+            {
+                "brand": "Hyundai",
+                "model": "IONIQ Electric",
+                "electric_mileage_km_per_kwh": 7.757952,
+                "range_km": 243.99,
+                "priceeuro": 34459,
+                "type": "hatchback",
+                "description": "Affordable electric hatchback with good efficiency"
+            },
+            {
+                "brand": "Hyundai",
+                "model": "Kona Electric 39 kWh",
+                "electric_mileage_km_per_kwh": 7.751337,
+                "range_km": 274.74,
+                "priceeuro": 33971,
+                "type": "suv",
+                "description": "Compact SUV with impressive efficiency for its class"
+            },
+            {
+                "brand": "Tesla",
+                "model": "Model 3 Standard Range Plus",
+                "electric_mileage_km_per_kwh": 7.617887,
+                "range_km": 298.63,
+                "priceeuro": 46380,
+                "type": "sedan",
+                "description": "Popular electric sedan with great efficiency and range"
+            },
+            {
+                "brand": "Mini",
+                "model": "Cooper SE",
+                "electric_mileage_km_per_kwh": 7.550589,
+                "range_km": 179.32,
+                "priceeuro": 31681,
+                "type": "compact",
+                "description": "Fun electric city car with classic Mini styling"
+            },
+            {
+                "brand": "Sono",
+                "model": "Sion",
+                "electric_mileage_km_per_kwh": 7.513713,
+                "range_km": 237.49,
+                "priceeuro": 25500,
+                "type": "hatchback",
+                "description": "Budget-friendly EV with solar body panels"
+            },
+            {
+                "brand": "BMW",
+                "model": "i3 120 Ah",
+                "electric_mileage_km_per_kwh": 7.431629,
+                "range_km": 233.21,
+                "priceeuro": 38017,
+                "type": "hatchback",
+                "description": "Premium city car with unique design and materials"
+            },
+            {
+                "brand": "Tesla",
+                "model": "Model 3 Long Range Dual Motor",
+                "electric_mileage_km_per_kwh": 7.415647,
+                "range_km": 451.98,
+                "priceeuro": 55480,
+                "type": "sedan",
+                "description": "Long-range version of Tesla's popular sedan"
+            },
+            {
+                "brand": "Tesla",
+                "model": "Model Y Long Range Dual Motor",
+                "electric_mileage_km_per_kwh": 7.397544,
+                "range_km": 431.48,
+                "priceeuro": 58620,
+                "type": "suv",
+                "description": "Tesla's efficient electric SUV offering"
+            },
+            {
+                "brand": "Volkswagen",
+                "model": "ID.3 Pro",
+                "electric_mileage_km_per_kwh": 7.352401,
+                "range_km": 331.72,
+                "priceeuro": 33000,
+                "type": "hatchback",
+                "description": "VW's dedicated electric hatchback platform"
+            }
+        ];
+
+        // DOM elements
+        const carsTableBody = document.getElementById('cars-table-body');
+        const sortEfficiencyBtn = document.getElementById('sort-efficiency');
+        const sortRangeBtn = document.getElementById('sort-range');
+        const sortPriceBtn = document.getElementById('sort-price');
+        const budgetSlider = document.getElementById('budget');
+        const budgetValue = document.getElementById('budget-value');
+        const rangeSlider = document.getElementById('range');
+        const rangeValue = document.getElementById('range-value');
+        const prioritySelect = document.getElementById('priority');
+        const getRecommendationsBtn = document.getElementById('get-recommendations');
+        const recommendationsContainer = document.getElementById('recommendations-container');
+        const compareCar1Select = document.getElementById('compare-car1');
+        const compareCar2Select = document.getElementById('compare-car2');
+        const compareButton = document.getElementById('compare-button');
+        const comparisonResult = document.getElementById('comparison-result');
+
+        // Initialize the app
+        function init() {
+            // Display top cars table
+            displayTopCars(carData);
+            
+            // Set up event listeners
+            sortEfficiencyBtn.addEventListener('click', () => sortCars('efficiency'));
+            sortRangeBtn.addEventListener('click', () => sortCars('range'));
+            sortPriceBtn.addEventListener('click', () => sortCars('price'));
+            
+            budgetSlider.addEventListener('input', updateBudgetValue);
+            rangeSlider.addEventListener('input', updateRangeValue);
+            
+            getRecommendationsBtn.addEventListener('click', generateRecommendations);
+            compareButton.addEventListener('click', compareCars);
+            
+            // Populate comparison dropdowns
+            populateComparisonDropdowns();
+            
+            // Initialize display values
+            updateBudgetValue();
+            updateRangeValue();
+        }
+
+        // Display top cars in the table
+        function displayTopCars(cars) {
+            carsTableBody.innerHTML = '';
+            
+            cars.forEach((car, index) => {
+                const row = document.createElement('tr');
+                
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${car.brand}</td>
+                    <td>${car.model}</td>
+                    <td>${car.electric_mileage_km_per_kwh.toFixed(2)}</td>
+                    <td>${car.range_km.toFixed(2)}</td>
+                    <td>€${car.priceeuro.toLocaleString()}</td>
+                `;
+                
+                carsTableBody.appendChild(row);
+            });
+        }
+
+        // Sort cars by different criteria
+        function sortCars(criteria) {
+            let sortedCars = [...carData];
+            
+            switch(criteria) {
+                case 'efficiency':
+                    sortedCars.sort((a, b) => b.electric_mileage_km_per_kwh - a.electric_mileage_km_per_kwh);
+                    break;
+                case 'range':
+                    sortedCars.sort((a, b) => b.range_km - a.range_km);
+                    break;
+                case 'price':
+                    sortedCars.sort((a, b) => a.priceeuro - b.priceeuro);
+                    break;
+            }
+            
+            displayTopCars(sortedCars);
+        }
+
+        // Update budget value display
+        function updateBudgetValue() {
+            const value = parseInt(budgetSlider.value);
+            budgetValue.textContent = `€${value.toLocaleString()}`;
+        }
+
+        // Update range value display
+        function updateRangeValue() {
+            const value = parseInt(rangeSlider.value);
+            rangeValue.textContent = `${value} km`;
+        }
+
+        // Generate recommendations based on user input
+        function generateRecommendations() {
+            const budget = parseInt(budgetSlider.value);
+            const minRange = parseInt(rangeSlider.value);
+            const priority = prioritySelect.value;
+            
+            // Filter cars based on budget and range
+            let filteredCars = carData.filter(car => 
+                car.priceeuro <= budget && car.range_km >= minRange
+            );
+            
+            // Sort based on priority
+            switch(priority) {
+                case 'efficiency':
+                    filteredCars.sort((a, b) => b.electric_mileage_km_per_kwh - a.electric_mileage_km_per_kwh);
+                    break;
+                case 'range':
+                    filteredCars.sort((a, b) => b.range_km - a.range_km);
+                    break;
+                case 'price':
+                    filteredCars.sort((a, b) => a.priceeuro - b.priceeuro);
+                    break;
+                case 'balanced':
+                    // Create a balanced score considering all factors
+                    filteredCars.forEach(car => {
+                        const maxEfficiency = Math.max(...carData.map(c => c.electric_mileage_km_per_kwh));
+                        const maxRange = Math.max(...carData.map(c => c.range_km));
+                        const minPrice = Math.min(...carData.map(c => c.priceeuro));
+                        
+                        const efficiencyScore = (car.electric_mileage_km_per_kwh / maxEfficiency) * 40;
+                        const rangeScore = (car.range_km / maxRange) * 30;
+                        const priceScore = (1 - (car.priceeuro - minPrice) / (Math.max(...carData.map(c => c.priceeuro)) - minPrice)) * 30;
+                        
+                        car.balancedScore = efficiencyScore + rangeScore + priceScore;
+                    });
+                    
+                    filteredCars.sort((a, b) => b.balancedScore - a.balancedScore);
+                    break;
+            }
+            
+            displayRecommendations(filteredCars);
+        }
+
+        // Display recommendations
+        function displayRecommendations(cars) {
+            if (cars.length === 0) {
+                recommendationsContainer.innerHTML = `
+                    <div class="no-results">
+                        <p>No cars match your criteria. Try adjusting your budget or range requirements.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            recommendationsContainer.innerHTML = '';
+            
+            cars.forEach(car => {
+                const card = document.createElement('div');
+                card.className = 'car-card';
+                
+                // Calculate a match score (simplified for this example)
+                const budget = parseInt(budgetSlider.value);
+                const minRange = parseInt(rangeSlider.value);
+                const priority = prioritySelect.value;
+                
+                let matchScore = 0;
+                let matchReason = "";
+                
+                if (priority === 'efficiency') {
+                    const maxEfficiency = Math.max(...carData.map(c => c.electric_mileage_km_per_kwh));
+                    matchScore = Math.round((car.electric_mileage_km_per_kwh / maxEfficiency) * 100);
+                    matchReason = "High efficiency match";
+                } else if (priority === 'range') {
+                    const maxRange = Math.max(...carData.map(c => c.range_km));
+                    matchScore = Math.round((car.range_km / maxRange) * 100);
+                    matchReason = "Long range match";
+                } else if (priority === 'price') {
+                    const minPrice = Math.min(...carData.map(c => c.priceeuro));
+                    matchScore = Math.round((1 - (car.priceeuro - minPrice) / (Math.max(...carData.map(c => c.priceeuro)) - minPrice)) * 100);
+                    matchReason = "Budget-friendly match";
+                } else {
+                    // For balanced, we already calculated the score
+                    matchScore = Math.round((car.balancedScore / 100) * 100);
+                    matchReason = "Well-balanced match";
+                }
+                
+                // Create recommendation note
+                let recommendationNote = "";
+                if (car.brand === "Lightyear" && car.model === "One") {
+                    recommendationNote = `
+                        <div class="recommendation-note">
+                            <strong>Premium Pick:</strong> The Lightyear One is the most efficient electric vehicle currently available, 
+                            featuring solar panels that can add up to 70km of range per day in sunny conditions.
+                        </div>
+                    `;
+                } else if (car.priceeuro < 35000) {
+                    recommendationNote = `
+                        <div class="recommendation-note">
+                            <strong>Budget Pick:</strong> This model offers excellent value for money with good efficiency 
+                            at an affordable price point.
+                        </div>
+                    `;
+                } else if (car.range_km > 400) {
+                    recommendationNote = `
+                        <div class="recommendation-note">
+                            <strong>Long Range Pick:</strong> With over 400km of range, this vehicle is ideal for 
+                            drivers who frequently take longer trips.
+                        </div>
+                    `;
+                }
+                
+                card.innerHTML = `
+                    <h3>${car.brand} ${car.model}</h3>
+                    <div class="price">€${car.priceeuro.toLocaleString()}</div>
+                    <div class="match-score" style="color: ${getScoreColor(matchScore)}">Match: ${matchScore}%</div>
+                    <div class="specs">
+                        <div class="spec-item">
+                            <span class="label">Efficiency:</span>
+                            <span class="value">${car.electric_mileage_km_per_kwh.toFixed(2)} km/kWh</span>
+                        </div>
+                        <div class="spec-item">
+                            <span class="label">Range:</span>
+                            <span class="value">${car.range_km.toFixed(0)} km</span>
+                        </div>
+                        <div class="spec-item">
+                            <span class="label">Type:</span>
+                            <span class="value">${car.type}</span>
+                        </div>
+                    </div>
+                    <p class="description">${car.description}</p>
+                    ${recommendationNote}
+                `;
+                
+                recommendationsContainer.appendChild(card);
+            });
+        }
+
+        // Get color based on match score
+        function getScoreColor(score) {
+            if (score >= 80) return '#2e7d32'; // Dark green
+            if (score >= 60) return '#7cb342'; // Medium green
+            if (score >= 40) return '#fdd835'; // Yellow
+            return '#e53935'; // Red
+        }
+
+        // Populate comparison dropdowns
+        function populateComparisonDropdowns() {
+            carData.forEach((car, index) => {
+                const option1 = document.createElement('option');
+                option1.value = index;
+                option1.textContent = `${car.brand} ${car.model}`;
+                
+                const option2 = document.createElement('option');
+                option2.value = index;
+                option2.textContent = `${car.brand} ${car.model}`;
+                
+                compareCar1Select.appendChild(option1);
+                compareCar2Select.appendChild(option2);
+            });
+        }
+
+        // Compare two selected cars
+        function compareCars() {
+            const car1Index = compareCar1Select.value;
+            const car2Index = compareCar2Select.value;
+            
+            if (car1Index === "" || car2Index === "") {
+                alert("Please select two cars to compare");
+                return;
+            }
+            
+            if (car1Index === car2Index) {
+                alert("Please select two different cars to compare");
+                return;
+            }
+            
+            const car1 = carData[car1Index];
+            const car2 = carData[car2Index];
+            
+            comparisonResult.innerHTML = `
+                <div class="comparison-card">
+                    <h3>${car1.brand} ${car1.model}</h3>
+                    <div class="price">€${car1.priceeuro.toLocaleString()}</div>
+                    <div class="comparison-specs">
+                        <div class="comparison-spec">
+                            <h4>Efficiency</h4>
+                            <div class="values">
+                                <span>${car1.electric_mileage_km_per_kwh.toFixed(2)} km/kWh</span>
+                                <span class="diff ${getDiffClass(car1.electric_mileage_km_per_kwh, car2.electric_mileage_km_per_kwh)}">
+                                    ${getDiffSymbol(car1.electric_mileage_km_per_kwh, car2.electric_mileage_km_per_kwh)}
+                                    ${Math.abs(car1.electric_mileage_km_per_kwh - car2.electric_mileage_km_per_kwh).toFixed(2)}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="comparison-spec">
+                            <h4>Range</h4>
+                            <div class="values">
+                                <span>${car1.range_km.toFixed(0)} km</span>
+                                <span class="diff ${getDiffClass(car1.range_km, car2.range_km)}">
+                                    ${getDiffSymbol(car1.range_km, car2.range_km)}
+                                    ${Math.abs(car1.range_km - car2.range_km).toFixed(0)}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="comparison-spec">
+                            <h4>Price</h4>
+                            <div class="values">
+                                <span>€${car1.priceeuro.toLocaleString()}</span>
+                                <span class="diff ${getDiffClass(car2.priceeuro, car1.priceeuro)}">
+                                    ${getDiffSymbol(car2.priceeuro, car1.priceeuro)}
+                                    €${Math.abs(car1.priceeuro - car2.priceeuro).toLocaleString()}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="comparison-card">
+                    <h3>${car2.brand} ${car2.model}</h3>
+                    <div class="price">€${car2.priceeuro.toLocaleString()}</div>
+                    <div class="comparison-specs">
+                        <div class="comparison-spec">
+                            <h4>Efficiency</h4>
+                            <div class="values">
+                                <span>${car2.electric_mileage_km_per_kwh.toFixed(2)} km/kWh</span>
+                                <span class="diff ${getDiffClass(car2.electric_mileage_km_per_kwh, car1.electric_mileage_km_per_kwh)}">
+                                    ${getDiffSymbol(car2.electric_mileage_km_per_kwh, car1.electric_mileage_km_per_kwh)}
+                                    ${Math.abs(car2.electric_mileage_km_per_kwh - car1.electric_mileage_km_per_kwh).toFixed(2)}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="comparison-spec">
+                            <h4>Range</h4>
+                            <div class="values">
+                                <span>${car2.range_km.toFixed(0)} km</span>
+                                <span class="diff ${getDiffClass(car2.range_km, car1.range_km)}">
+                                    ${getDiffSymbol(car2.range_km, car1.range_km)}
+                                    ${Math.abs(car2.range_km - car1.range_km).toFixed(0)}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="comparison-spec">
+                            <h4>Price</h4>
+                            <div class="values">
+                                <span>€${car2.priceeuro.toLocaleString()}</span>
+                                <span class="diff ${getDiffClass(car1.priceeuro, car2.priceeuro)}">
+                                    ${getDiffSymbol(car1.priceeuro, car2.priceeuro)}
+                                    €${Math.abs(car2.priceeuro - car1.priceeuro).toLocaleString()}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Get CSS class for difference display
+        function getDiffClass(value1, value2) {
+            if (value1 > value2) return 'positive';
+            if (value1 < value2) return 'negative';
+            return 'neutral';
+        }
+
+        // Get symbol for difference display
+        function getDiffSymbol(value1, value2) {
+            if (value1 > value2) return '↑';
+            if (value1 < value2) return '↓';
+            return '=';
+        }
+
+        // Initialize the app when the DOM is loaded
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
